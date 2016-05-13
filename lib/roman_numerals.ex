@@ -1,81 +1,16 @@
 defmodule RomanNumerals do
-  def to_roman(1) do
-    "I"
-  end
+  @integers_to_romans %{
+    1000 => "M",
+     500 => "D",
+     100 => "C",
+      50 => "L",
+      10 => "X",
+       5 => "V",
+       1 => "I",
+  }
 
-  def to_roman(5) do
-    "V"
-  end
-
-  def to_roman(10) do
-    "X"
-  end
-
-  def to_roman(50) do
-    "L"
-  end
-
-  def to_roman(100) do
-    "C"
-  end
-
-  def to_roman(4) do
-    to_roman(1) <> to_roman(5)
-  end
-
-  def to_roman(9) do
-    to_roman(1) <> to_roman(10)
-  end
-
-  def to_roman(14) do
-    to_roman(10) <> to_roman(4)
-  end
-
-  def to_roman(15) do
-    to_roman(10) <> to_roman(5)
-  end
-
-  def to_roman(24) do
-    to_roman(20) <> to_roman(4)
-  end
-
-  def to_roman(25) do
-    to_roman(20) <> to_roman(5)
-  end
-
-  def to_roman(29) do
-    to_roman(20) <> to_roman(9)
-  end
-
-  def to_roman(34) do
-    to_roman(30) <> to_roman(4)
-  end
-
-  def to_roman(40) do
-    to_roman(10) <> to_roman(50)
-  end
-
-  def to_roman(90) do
-    to_roman(10) <> to_roman(100)
-  end
-
-  def to_roman(99) do
-    to_roman(90) <> to_roman(9)
-  end
-
-  def to_roman(n) when n < 4 do
-    to_roman(1)
-    |> String.duplicate(n)
-  end
-
-  def to_roman(n) when n > 50 and rem(n, 10) == 0 do
-    to_roman(50) <> to_roman(n - 50)
-  end
-
-  def to_roman(n) when rem(n, 10) == 0 do
-    to_roman(10)
-    |> String.duplicate(div n, 10)
-  end
+  @recognized_integers_small_to_large Map.keys(@integers_to_romans) |> Enum.sort
+  @recognized_integers_large_to_small Enum.reverse(@recognized_integers_small_to_large)
 
   @doc """
   Converts integers to roman numerals.
@@ -84,35 +19,41 @@ defmodule RomanNumerals do
   iex> RomanNumerals.to_roman(9)
   "IX"
   """
-  def to_roman(n) when n > 50 do
-    to_roman(50) <> to_roman(n - 50)
+  def to_roman(n) when n in @recognized_integers_large_to_small do
+    @integers_to_romans[n]
   end
 
-  def to_roman(n) when n > 40 do
-    to_roman(40) <> to_roman(n - 40)
+  def to_roman(n) do
+    to_roman(n, subtractor(n), upper_bound(n))
   end
 
-  def to_roman(n) when n > 30 do
-    to_roman(30) <> to_roman(n - 30)
+  def to_roman(n, subtractor, upper) when n >= upper - subtractor do
+    to_roman(subtractor) <> to_roman(n + subtractor)
   end
 
-  def to_roman(n) when n > 20 do
-    to_roman(20) <> to_roman(n - 20)
+  def to_roman(n, _, _) do
+    lower = lower_bound(n)
+    to_roman(lower) <> to_roman(n - lower)
   end
 
-  def to_roman(n) when n > 10 do
-    to_roman(10) <> to_roman(n - 10)
+  # Returns the biggest possible subtractor (i.e. a mapped integer starting with 1)
+  defp subtractor(n) do
+    @recognized_integers_large_to_small |> Enum.find(&(&1 <= n && valid_subtractor?(&1)))
   end
 
-  def to_roman(n) when n > 25 do
-    to_roman(20) <> to_roman(5) <> to_roman(n - 25)
+  # Only numbers starting with 1 and divisible by 10 are used as subtractors
+  defp valid_subtractor?(n) do
+    [first | _rest] = Integer.to_string(n) |> String.to_char_list
+    first == 49 # char code for the numeral '1'
   end
 
-  def to_roman(n) when n > 15 do
-    to_roman(15) <> to_roman(n - 15)
+  # Returns the largest mapping contained in `n`
+  defp lower_bound(n) do
+    @recognized_integers_large_to_small |> Enum.find(&(&1 <= n))
   end
 
-  def to_roman(n) when n > 5 do
-    to_roman(5) <> to_roman(n - 5)
+  # Returns the integer for the next mapping larger than `n`
+  defp upper_bound(n) do
+    @recognized_integers_small_to_large |> Enum.find(&(&1 > n))
   end
 end
