@@ -77,6 +77,13 @@ defmodule RomanNumerals do
     |> String.duplicate(div n, 10)
   end
 
+  @doc """
+  Converts integers to roman numerals.
+
+  ## Examples
+  iex> RomanNumerals.to_roman(9)
+  "IX"
+  """
   def to_roman(n) when n > 50 do
     to_roman(50) <> to_roman(n - 50)
   end
